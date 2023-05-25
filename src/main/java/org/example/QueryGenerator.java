@@ -8,6 +8,7 @@ import java.util.stream.Collectors;
 public class QueryGenerator {
 
     public static void main(String[] args) {
+        //<editor-fold desc="Create Test Data">
         Table table1 = new Table();
         table1.setId(1L);
         table1.setName("t1");
@@ -72,20 +73,20 @@ public class QueryGenerator {
         Relationship relationship1 = new Relationship();
         relationship1.setTable1(table1);
         relationship1.setTable2(table2);
-        relationship1.setField1(t1Age);
-        relationship1.setField2(t2age);
+        relationship1.setFields1(List.of(t1Age, t1Name));
+        relationship1.setFields2(List.of(t2age, t2Name));
 
         Relationship relationship2 = new Relationship();
         relationship2.setTable1(table2);
         relationship2.setTable2(table3);
-        relationship2.setField1(t2accountNumber);
-        relationship2.setField2(t3accountNumber);
+        relationship2.setFields1(List.of(t2accountNumber));
+        relationship2.setFields2(List.of(t3accountNumber));
 
         Relationship relationship3 = new Relationship();
         relationship3.setTable1(table1);
         relationship3.setTable2(table3);
-        relationship3.setField1(t1Pan);
-        relationship3.setField2(t3pan);
+        relationship3.setFields1(List.of(t1Pan, t1Name));
+        relationship3.setFields2(List.of(t3pan, t3name));
 
         table1.setFields(List.of(t1Id, t1Name, t1Pan, t1Age));
         table1.setRelationships(List.of(relationship1, relationship3));
@@ -94,10 +95,13 @@ public class QueryGenerator {
         table3.setFields(List.of(t3id, t3name, t3pan, t3accountNumber));
         table3.setRelationships(List.of(relationship2, relationship3));
 
-        QueryGenerator queryGenerator = new QueryGenerator();
-        List<Field> requiredFields = List.of(t2Id, t1Name, t1Pan, t1Age, t2Id, t2Name, t2accountNumber, t2age, t3id, t3name, t3pan, t3accountNumber);
+        List<Field> requiredFields = List.of(t2Id, t1Name,  t2age, t3id, t3accountNumber);
         Field queryParam = t1Pan;
+        // </editor-fold>
+
+        QueryGenerator queryGenerator = new QueryGenerator();
         String query = queryGenerator.generateQuery(requiredFields, queryParam);
+
         System.out.println(query);
     }
 
@@ -147,11 +151,22 @@ public class QueryGenerator {
         if (joinedTables.contains(t1)) {
             newTable = t2;
         }
+        StringBuilder joinString = new StringBuilder();
+        joinString.append("LEFT JOIN ");
+        joinString.append(newTable.getName());
+        joinString.append(" ON ");
+        for (int i = 0; i < r.getFields1().size(); i++) {
+            if (i > 0) joinString.append(" AND ");
+            joinString.append(r.getTable1().getName());
+            joinString.append(".");
+            joinString.append(r.getFields1().get(i).getName());
+            joinString.append(" = ");
+            joinString.append(r.getTable2().getName());
+            joinString.append(".");
+            joinString.append(r.getFields2().get(i).getName());
+        }
 
-        return "LEFT JOIN " + ( newTable.getName()) + " ON " +
-                r.getTable1().getName() + "." + r.getField1().getName() +
-                " = " +
-                r.getTable2().getName() + "." + r.getField2().getName();
+        return joinString.toString();
     }
 
 }
