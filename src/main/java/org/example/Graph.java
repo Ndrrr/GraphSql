@@ -1,5 +1,8 @@
 package org.example;
 
+import org.example.model.Relationship;
+import org.example.model.Table;
+
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;

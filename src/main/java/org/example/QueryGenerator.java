@@ -1,13 +1,27 @@
 package org.example;
 
+import org.example.model.Field;
+import org.example.model.Relationship;
+import org.example.model.Table;
+
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.stream.Collectors;
 
 public class QueryGenerator {
-
     public static void main(String[] args) {
+        /*
+         * tables:
+         *  t1(id, name, pan, age)
+         *  t2(id, name, accountNumber, age)
+         *  t3(id, name, pan, accountNumber)
+         *
+         * relationships:
+         *  t1 - t2 (name, age)
+         *  t1 - t3 (pan, name)
+         *  t2 - t3 (accountNumber)
+         */
         //<editor-fold desc="Create Test Data">
         Table table1 = new Table();
         table1.setId(1L);
@@ -94,10 +108,16 @@ public class QueryGenerator {
         table2.setRelationships(List.of(relationship1, relationship2));
         table3.setFields(List.of(t3id, t3name, t3pan, t3accountNumber));
         table3.setRelationships(List.of(relationship2, relationship3));
-
+        // </editor-fold>
+        /*
+         * example request:
+         *  {
+         *      requiredFields: ["t1.id", "t1.name", "t2.pan", "t3.pan"],
+         *      searchParam: {t1.Pan: "12345678"}
+         *  }
+         */
         List<Field> requiredFields = List.of(t2Id, t1Name,  t2age, t3id, t3accountNumber);
         Field queryParam = t1Pan;
-        // </editor-fold>
 
         QueryGenerator queryGenerator = new QueryGenerator();
         String query = queryGenerator.generateQuery(requiredFields, queryParam);
