@@ -16,8 +16,25 @@ public class QueryGenerator {
         List<Table> requiredTables = resolveRequiredTables(requiredFields);
         Table startingTable = queryParams.get(0).getTable();
         Graph graph = new Graph();
-        HashMap<Table, Table> pathMap = graph.bfs(startingTable, requiredTables);
-        return constructQueryFromPathMap(pathMap, startingTable, requiredFields, queryParams);
+        HashMap<Table, Table> pathMap = graph.bfs(startingTable);
+        HashSet<Table> tablesForJoins = getTablesForJoins(pathMap, requiredTables);
+        return constructQueryFromPathMap(pathMap, tablesForJoins, startingTable, requiredFields, queryParams);
+    }
+
+    private HashSet<Table> getTablesForJoins(HashMap<Table, Table> pathMap, List<Table> requiredTables) {
+        HashSet<Table> tablesForJoins = new HashSet<>();
+        requiredTables.forEach(t -> tablesForJoins.addAll(getPathToRoot(pathMap, t)));
+        return tablesForJoins;
+    }
+
+    private HashSet<Table> getPathToRoot(HashMap<Table, Table> pathMap, Table t) {
+        HashSet<Table> pathToRoot = new HashSet<>();
+        Table temp = t;
+        while (!temp.getId().equals(-1L)) {
+            pathToRoot.add(temp);
+            temp = pathMap.get(temp);
+        }
+        return pathToRoot;
     }
 
     private List<Table> resolveRequiredTables(List<Field> requiredFields) {
@@ -27,9 +44,15 @@ public class QueryGenerator {
                 .collect(Collectors.toList());
     }
 
-    private String constructQueryFromPathMap(HashMap<Table, Table> pathMap, Table startingTable,
-                                            List<Field> requiredFields, List<Field> queryParams) {
-        System.out.println("First table" + startingTable);
+    private String constructQueryFromPathMap(
+            HashMap<Table, Table> pathMap,
+            HashSet<Table> tablesForJoins,
+            Table startingTable,
+            List<Field> requiredFields,
+            List<Field> queryParams
+    ) {
+        System.out.println("Starting table: " + startingTable);
+        System.out.println("All tables: ");
         pathMap.forEach((key, value) -> System.out.println(key.toString() + " " + value.getId()));
         HashSet<Table> joinedTables = new HashSet<>();
         joinedTables.add(startingTable);
@@ -38,7 +61,7 @@ public class QueryGenerator {
                 " FROM " +
                 startingTable.getName() +
                 " " +
-                constructJoins(pathMap, joinedTables) +
+                constructJoins(pathMap, joinedTables, tablesForJoins) +
                 " WHERE " +
                 constructWhere(queryParams);
     }
@@ -49,9 +72,14 @@ public class QueryGenerator {
                 .collect(Collectors.joining(", "));
     }
 
-    private String constructJoins(HashMap<Table, Table> pathMap, HashSet<Table> joinedTables) {
+    private String constructJoins(
+            HashMap<Table, Table> pathMap,
+            HashSet<Table> joinedTables,
+            HashSet<Table> tablesForJoin
+    ) {
         return pathMap.entrySet().stream()
-                .skip(1) // skipping first table for not being joined itself
+                .skip(1) // skipping root
+                .filter(entry -> tablesForJoin.contains(entry.getKey()) && tablesForJoin.contains(entry.getValue()))
                 .map(entry -> constructSingleJoin(entry.getKey(), entry.getValue(), joinedTables))
                 .sorted(Collections.reverseOrder())
                 .collect(Collectors.joining(" "));

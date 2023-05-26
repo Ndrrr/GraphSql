@@ -5,12 +5,11 @@ import org.ndrrr.model.Table;
 
 import java.util.HashMap;
 import java.util.LinkedList;
-import java.util.List;
 import java.util.Queue;
 
 public class Graph {
 
-    public HashMap<Table, Table> bfs(Table startingTable, List<Table> requiredTables) {
+    public HashMap<Table, Table> bfs(Table startingTable) {
         HashMap<Table, Boolean> visited = new HashMap<>();
         HashMap<Table, Table> parent = new HashMap<>();
 
@@ -22,7 +21,6 @@ public class Graph {
         while (!queue.isEmpty()) {
             Table table = queue.poll();
             visited.put(table, true);
-            requiredTables.remove(table);
             for (Relationship relationship : table.getRelationships()) {
                 Table child = relationship.getTable1().equals(table) ?
                         relationship.getTable2() : relationship.getTable1();
