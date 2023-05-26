@@ -1,10 +1,12 @@
-package org.example.model;
+package org.ndrrr.model;
 
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
 @Data
+@Builder
 @NoArgsConstructor
 @AllArgsConstructor
 public class Field {
@@ -20,7 +22,15 @@ public class Field {
         this.table = table;
     }
 
-    public String resolveValue() {
+    public String getSelectClause() {
+        return this.getTable().getName() + "." + this.getName();
+    }
+
+    public String getWhereClause() {
+        return this.getTable().getName() + "." + this.getName() + " = " + this.resolveValue();
+    }
+
+    private String resolveValue() {
         if (this.getDefaultValue() == null)
             return "?";
         return this.getDefaultValue().toString();

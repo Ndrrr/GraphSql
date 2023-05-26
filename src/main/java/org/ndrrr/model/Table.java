@@ -1,4 +1,4 @@
-package org.example.model;
+package org.ndrrr.model;
 
 import lombok.Data;
 

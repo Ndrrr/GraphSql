@@ -1,7 +1,7 @@
-package org.example;
+package org.ndrrr;
 
-import org.example.model.Relationship;
-import org.example.model.Table;
+import org.ndrrr.model.Relationship;
+import org.ndrrr.model.Table;
 
 import java.util.HashMap;
 import java.util.LinkedList;
