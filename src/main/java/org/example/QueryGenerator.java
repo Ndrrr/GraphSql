@@ -117,20 +117,20 @@ public class QueryGenerator {
          *  }
          */
         List<Field> requiredFields = List.of(t2Id, t1Name,  t2age, t3id, t3accountNumber);
-        Field queryParam = t1Pan;
+        List<Field> queryParams = List.of(t1Pan, t1Age);
 
         QueryGenerator queryGenerator = new QueryGenerator();
-        String query = queryGenerator.generateQuery(requiredFields, queryParam);
+        String query = queryGenerator.generateQuery(requiredFields, queryParams);
 
         System.out.println(query);
     }
 
-    public String generateQuery(List<Field> requiredFields, Field queryParam) {
+    public String generateQuery(List<Field> requiredFields, List<Field> queryParams) {
         List<Table> requiredTables = resolveRequiredTables(requiredFields);
-        Table startingTable = queryParam.getTable();
+        Table startingTable = queryParams.get(0).getTable();
         Graph graph = new Graph();
         HashMap<Table, Table> pathMap = graph.bfs(startingTable, requiredTables);
-        return constructQueryFromPathMap(pathMap, startingTable, requiredFields, queryParam);
+        return constructQueryFromPathMap(pathMap, startingTable, requiredFields, queryParams);
     }
 
     public List<Table> resolveRequiredTables(List<Field> requiredFields) {
@@ -140,7 +140,8 @@ public class QueryGenerator {
                 .collect(Collectors.toList());
     }
 
-    public String constructQueryFromPathMap(HashMap<Table, Table> pathMap, Table startingTable, List<Field> requiredFields, Field queryParam) {
+    public String constructQueryFromPathMap(HashMap<Table, Table> pathMap, Table startingTable,
+                                            List<Field> requiredFields, List<Field> queryParams) {
         System.out.println("First table" + startingTable);
         pathMap.forEach((key, value) -> System.out.println(key.toString() + " " + value.getId()));
         HashSet<Table> joinedTables = new HashSet<>();
@@ -157,8 +158,9 @@ public class QueryGenerator {
                         .map(entry -> constructJoinString(entry.getKey(), entry.getValue(), joinedTables))
                         .collect(Collectors.joining(" ")) +
                 " WHERE " +
-                queryParam.getTable().getName() + "." + queryParam.getName() +
-                " = ?";
+                queryParams.stream()
+                        .map(field -> field.getTable().getName() + "." + field.getName() + " = ?")
+                        .collect(Collectors.joining(" AND "));
     }
 
     public String constructJoinString(Table t1, Table t2, HashSet<Table> joinedTables) {
