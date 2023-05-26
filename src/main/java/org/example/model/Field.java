@@ -1,13 +1,30 @@
 package org.example.model;
 
+import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 @Data
+@NoArgsConstructor
+@AllArgsConstructor
 public class Field {
 
     private Long id;
     private String name;
     private Table table;
+    private Object defaultValue;
+
+    public Field(Long id, String name, Table table) {
+        this.id = id;
+        this.name = name;
+        this.table = table;
+    }
+
+    public String resolveValue() {
+        if (this.getDefaultValue() == null)
+            return "?";
+        return this.getDefaultValue().toString();
+    }
 
     @Override
     public boolean equals(Object o) {
