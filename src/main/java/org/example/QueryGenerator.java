@@ -133,14 +133,14 @@ public class QueryGenerator {
         return constructQueryFromPathMap(pathMap, startingTable, requiredFields, queryParams);
     }
 
-    public List<Table> resolveRequiredTables(List<Field> requiredFields) {
+    private List<Table> resolveRequiredTables(List<Field> requiredFields) {
         return requiredFields.stream()
                 .map(Field::getTable)
                 .distinct()
                 .collect(Collectors.toList());
     }
 
-    public String constructQueryFromPathMap(HashMap<Table, Table> pathMap, Table startingTable,
+    private String constructQueryFromPathMap(HashMap<Table, Table> pathMap, Table startingTable,
                                             List<Field> requiredFields, List<Field> queryParams) {
         System.out.println("First table" + startingTable);
         pathMap.forEach((key, value) -> System.out.println(key.toString() + " " + value.getId()));
@@ -159,15 +159,12 @@ public class QueryGenerator {
                         .collect(Collectors.joining(" ")) +
                 " WHERE " +
                 queryParams.stream()
-                        .map(field -> field.getTable().getName() + "." + field.getName() + " = ?")
+                        .map(field -> field.getTable().getName() + "." + field.getName() + " = " + field.resolveValue())
                         .collect(Collectors.joining(" AND "));
     }
 
-    public String constructJoinString(Table t1, Table t2, HashSet<Table> joinedTables) {
-        Relationship r = t1.getRelationships().stream()
-                .filter(relationship -> relationship.getTable2().equals(t2) || relationship.getTable1().equals(t2))
-                .findFirst()
-                .orElseThrow(() -> new RuntimeException("No relationship found between " + t1.getName() + " and " + t2.getName()));
+    private String constructJoinString(Table t1, Table t2, HashSet<Table> joinedTables) {
+        Relationship r = getRelationship(t1, t2);
 
         Table newTable = t1;
         if (joinedTables.contains(t1)) {
@@ -189,6 +186,17 @@ public class QueryGenerator {
         }
 
         return joinString.toString();
+    }
+
+    private Relationship getRelationship(Table t1, Table t2) {
+        return t1.getRelationships().stream()
+                .filter(relationship -> isRelated(relationship, t2))
+                .findFirst()
+                .orElseThrow(() -> new RuntimeException("No relationship found between " + t1.getName() + " and " + t2.getName()));
+    }
+
+    private Boolean isRelated(Relationship r, Table t) {
+        return r.getTable1().equals(t) || r.getTable2().equals(t);
     }
 
 }
